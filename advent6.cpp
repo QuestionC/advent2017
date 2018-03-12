@@ -3,7 +3,7 @@
 // Basically building a pits and stones machine.
 
 #include <algorithm>
-#include <unordered_set>
+#include <unordered_map>
 
 std::vector<int> get_input() {
     std::ifstream input("input6.txt");
@@ -41,24 +41,23 @@ void distribute(std::vector<int> & bank) {
 int main (void) {
     std::vector<int> memory_bank = get_input();
 
-    std::unordered_set<std::string> seen;
+    std::unordered_map<std::string, int> seen;
 
-    seen.insert(ToString(memory_bank));
+    int cycle = 0;
 
-    int cycles = 1;
     for (;;) {
-        distribute(memory_bank);
-
         std::string s = ToString(memory_bank);
-        if (seen.count(s) != 0) {
+
+        if (seen.find(s) != seen.end()) {
             break;
         }
 
-        seen.insert(s);
-        cycles += 1;
+        seen[s] = cycle++;
+
+        distribute(memory_bank);
     }
 
-    std::cout << cycles << "\n";
+    std::cout << cycle - seen[ToString(memory_bank)] << "\n";
 
     return 0;
 }
