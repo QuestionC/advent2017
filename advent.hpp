@@ -35,4 +35,11 @@ std::ostream & operator<< (std::ostream & out, std::vector<int> V) {
     return out;
 }
 
+std::string ToString(std::vector<int> const & V) {
+    std::stringstream S;
+    S << V;
+
+    return S.str();
+}
+
 #endif // ADVENT_HPP
