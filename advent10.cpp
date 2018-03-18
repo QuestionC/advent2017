@@ -36,6 +36,20 @@ struct Rope {
         skip++;
         skip %= 256;
     }
+
+    std::vector<int> dense_hash() {
+        std::vector<int> result;
+
+        for (int i = 0; i < 256; i += 16) {
+            int curr_value = 0;
+            for (int j = 0; j < 16; ++j) {
+                curr_value ^= circular_array[i + j];
+            }
+            result.push_back(curr_value);
+        }
+
+        return result;
+    }
 };
 
 std::ostream & operator<< (std::ostream & out, Rope const & print_me) {
@@ -52,15 +66,35 @@ int main(void) {
     Rope R;
 
     int n;
-    int length;
-    while ((n = fscanf(f, "%d,", &length)) > 0) {
-        R.knot(length);
+    std::vector<int> V;
 
-        std::cout << length << "\n";
-        std::cout << R;
+    while ((n = getc(f)) != EOF && n != '\n') {
+        DPRINT(n);
+        V.push_back(n);
     }
 
-    printf ("%d\n", R.circular_array[0] * R.circular_array[1]);
+    V.push_back(17);
+    V.push_back(31);
+    V.push_back(73);
+    V.push_back(47);
+    V.push_back(23);
+
+    DPRINT(V);
+
+    for (int i = 0; i < 64; ++i) {
+        for (auto p = V.begin(); p != V.end(); ++p) {
+            R.knot(*p);
+        }
+    }
+
+    std::vector<int> dense_hash = R.dense_hash();
+
+    DPRINT(dense_hash);
+
+    for (std::vector<int>::const_iterator ci = dense_hash.begin(); ci != dense_hash.end(); ++ci) {
+        printf("%x", *ci);
+    }
+    printf("\n");
 
     return 0;
 }
