@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <map>
 
 #define DPRINT(X) std::cerr << #X ": " << X << '\n';
 
@@ -93,5 +94,33 @@ std::string str_trim(std::string const & trim_me) {
 
     return trim_me.substr(begin, end);
 }
+
+void print(FILE * f, int const & i) {
+    printf("%d", i);
+}
+
+template<class A, class B>
+void print(FILE * f, std::map<A, B> const & C) {
+    printf ("{");
+    for (typename std::map<A,B>::const_iterator ci = C.begin(); ci != C.end(); ++ci) {
+        if (ci != C.begin()) {
+            printf(", ");
+        }
+        print(f, ci->first);
+        fprintf(f, ": ");
+        print(f, ci->second);
+    }
+    printf("}");
+}
+
+template<class A, class B>
+void print(FILE * f, std::pair<A, B> const & P) {
+    printf("(");
+    print(f, P.first);
+    printf(", ");
+    print(f, P.second);
+    printf(")");
+}
+
 
 #endif // ADVENT_HPP
