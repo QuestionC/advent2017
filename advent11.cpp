@@ -23,6 +23,8 @@ int main (void) {
     
     int ns = 0;
     int ew = 0;
+    int max_steps = 0;
+
     while ((n = fscanf(f, "%[^,\n],", direction)) > 0) {
         DPRINT(std::string(direction));
         if (strcmp(direction, "ne") == 0) {
@@ -47,14 +49,18 @@ int main (void) {
             --ns;
             --ew;
         }
-        DPRINT(ns);
-        DPRINT(ew);
+
+        int d = distance(ns, ew);
+        if (d > max_steps)
+            max_steps = d;
     }
 
     DPRINT(ns);
     DPRINT(ew);
 
-    printf ("%d\n", distance(ns, ew));
+    DPRINT(distance(ns, ew));
+    DPRINT(max_steps);
+
 
     return 0;
 }
