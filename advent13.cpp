@@ -3,6 +3,9 @@
 #include "advent.hpp"
 #include <map>
 
+struct FirewallMachine;
+void print(FILE *f, FirewallMachine const & print_me);
+
 struct FirewallMachine {
     typedef std::map<int, std::pair<int, int> > rows_t;
     std::map<int, std::pair<int, int> > rows;
@@ -28,56 +31,124 @@ struct FirewallMachine {
             pos = (pos + 1) % num_states;
         }
     }
+
+    struct Walker {
+        FirewallMachine * machine;
+        int position;
+        rows_t::const_iterator iter;
+
+        Walker(FirewallMachine * F) : machine(F), position(0), iter(machine->rows.begin()) {
+        }
+
+        Walker() {}
+        
+
+        bool caught() {
+            if (position == iter->first) {
+                int range = iter->second.first;
+                int scanner = iter->second.second;
+
+                if (scanner == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool next() {
+            if (position == iter->first) {
+                ++iter;
+            }
+            ++position;
+
+            return iter != machine->rows.end();
+        }
+    };
+
+    Walker walker() {
+        return Walker(this);
+    }
 };
 
 void print(FILE *f, FirewallMachine const & print_me) {
     print(f, print_me.rows);
 }
 
+void print(FILE * f, FirewallMachine::Walker const & print_me) {
+    fprintf (f, "position: %d, iterator: ", print_me.position);
+    print (f, *print_me.iter);
+}
 
 int main (void) {
     FILE * f = fopen("input13.txt", "r");
 
     int chars_read;
 
-    int depth, range;
     FirewallMachine machine;
 
-    while (fscanf(f, " %d : %d", &depth, &range) > 0) {
-        machine.addLayer(depth, range);
-    }
+    { // Build the machine
+        int depth, range;
 
-    int position = 0;
-    FirewallMachine::rows_t::iterator iter = machine.rows.begin();
+        while (fscanf(f, " %d : %d", &depth, &range) > 0) {
+            machine.addLayer(depth, range);
+        }
+    } // Done building machine
+
+    FirewallMachine backup = machine;
+    FirewallMachine::Walker my_walker = machine.walker();
 
     int penalty = 0;
     for (;;) {
-        DPRINT(position);
-        print(f, machine);
-        printf("\n-------------------\n");
-
-        if (position == iter->first) {
-            // We are on a row
-            int range = iter->second.first;
-            int scanner = iter->second.second;
-
-            if (scanner == 0) {
-                printf("Penalty!\n");
-                // If we stepped on a row in pos0, penalty.
-                penalty += position * range;
-            }
-            ++iter;
-
-            if (iter == machine.rows.end())
-                break;
-
+        if (my_walker.caught()) {
+            penalty += my_walker.position * my_walker.iter->second.first;
         }
 
-        ++position;
+        if (!my_walker.next())
+            break;
+
         machine.step();
     }
 
     printf("%d\n", penalty);
+
+    // Now let's spin up a lot of walkers and kill them when they fail.  If a walker makes it to the end, report it.
+
+    machine = backup;
+
+    std::map<int, FirewallMachine::Walker> walkers;
+    std::map<int, FirewallMachine::Walker>::iterator iter;
+    for (int i = 0; ; ++i) {
+        // The key is the delay for the walker.  We spawn a new walker every cycle.
+        walkers[i] = machine.walker();
+
+        //print(stdout, machine);
+        //printf("\n");
+    
+        for (iter = walkers.begin(); iter != walkers.end(); /* ++iter */) {
+            if (iter->second.caught()) {
+                // printf ("Erasing delay %d due to pos %d\n", iter->first, iter->second.position);
+                walkers.erase(iter++);
+            }
+            else {
+                if (iter->second.next() == false) {
+                    // Walker completed
+                    break;
+                }
+                iter++;
+            }
+        }
+
+        if (iter != walkers.end()) {
+            // We terminated loop due to break, meaning we found solution.
+            printf ("Breaking out\n");
+            break;
+        }
+
+        machine.step();
+    }
+
+    print(stdout, *iter);
+    printf("\n");
 
     return 0;
 }
