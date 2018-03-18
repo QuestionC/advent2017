@@ -61,6 +61,5 @@ int main (void) {
     DPRINT(distance(ns, ew));
     DPRINT(max_steps);
 
-
     return 0;
 }
