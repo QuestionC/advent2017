@@ -34,29 +34,31 @@ int main (void) {
         connections.push_back(to_vector);
     }
 
-    std::unordered_set<int> group0;
+    std::unordered_set<int> visited;
     std::queue<int> queue;
+    int groups = 0;
+    for (int i = 0; i < connections.size(); ++i) {
+        if (visited.count(i) == 0) {
+            ++groups;
+            queue.push(i);
+            visited.insert(i);
+    
+            while (!queue.empty()) {
+                int item = queue.front();
+                queue.pop();
 
-    queue.push(0);
-    group0.insert(0);
-
-    while (!queue.empty()) {
-        int item = queue.front();
-        queue.pop();
-
-        std::vector<int> neighbors = connections[item];
-        printf ("%d -> ", item);
-        std::cout << neighbors;
-        for (std::vector<int>::const_iterator ci = neighbors.begin(); ci != neighbors.end(); ++ci) {
-            if (group0.count(*ci) == 0) {
-                queue.push(*ci);
-                group0.insert(*ci);
+                std::vector<int> const & neighbors = connections[item];
+                for (std::vector<int>::const_iterator ci = neighbors.begin(); ci != neighbors.end(); ++ci) {
+                    if (visited.count(*ci) == 0) {
+                        queue.push(*ci);
+                        visited.insert(*ci);
+                    }
+                }
             }
         }
-        printf("\n");
     }
 
-    printf("%d\n", group0.size());
+    printf("%d\n", groups);
 
     return 0;
 }
