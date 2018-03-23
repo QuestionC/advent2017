@@ -4,6 +4,7 @@
 #include <set>
 #include <queue>
 #include <map>
+#include <assert.h>
 
 int count_bits(char string[16]);
 void print_bits(FILE * f, const char string[16]);
@@ -16,18 +17,19 @@ int main (void) {
         FILE * f = fopen("input14.txt", "r");
         fscanf(f, "%s", key);
     }
+    assert(strcmp(key, "xlqgujun") == 0);
 
-    // strcpy(key, "flqrgnkx");
+    // strcpy(key, "flqrgnkx"); // Example key.
 
-    char buff[200];
-    char hash[16];
 
     int count = 0;
     BinaryGrid my_grid;
     for (int salt = 0; salt < 128; ++salt) {
-        sprintf(buff, "%s-%d", key, salt);
+        char salted_key[100];
+        char hash[16];
+        sprintf(salted_key, "%s-%d", key, salt);
 
-        Rope::Hash(buff, hash);
+        Rope::Hash(salted_key, hash);
         memcpy(my_grid.buff[salt], hash, sizeof(hash));
         count += count_bits(hash);
     }
@@ -35,7 +37,6 @@ int main (void) {
     printf("%d\n", count);
 
     print(stdout, my_grid);
-
 
     printf("%d\n", count_regions(my_grid));
 
@@ -105,9 +106,9 @@ bool fill_region(BinaryGrid const & grid, std::map<std::pair<int, int>, char> & 
     
     bool result = false;
 
-    printf("x, y: %d %d\n", x, y);
+    //printf("x, y: %d %d\n", x, y);
     if  (grid.at(x, y) && visited.count(xy_pair) == 0) {
-        printf("Initial Hit!\n");
+        // printf("Initial Hit!\n");
         // The cell isn't empty and hasn't been visited yet.
         result = true;
 
@@ -123,7 +124,7 @@ bool fill_region(BinaryGrid const & grid, std::map<std::pair<int, int>, char> & 
             int visit_me_x = visit_me_pair.first;
             int visit_me_y = visit_me_pair.second;
 
-            printf("Queue: %d, %d\n", visit_me_x, visit_me_y);
+            //printf("Queue: %d, %d\n", visit_me_x, visit_me_y);
 
             // Put neighbors into the queue.
             std::vector< std::pair<int, int> > visit_us;
@@ -132,9 +133,9 @@ bool fill_region(BinaryGrid const & grid, std::map<std::pair<int, int>, char> & 
             visit_us.push_back(std::make_pair(visit_me_x, visit_me_y + 1));
             visit_us.push_back(std::make_pair(visit_me_x, visit_me_y - 1));
             for (auto ci = visit_us.begin(); ci != visit_us.end(); ++ci) {
-                printf("ci = %d, %d\n", ci->first, ci->second);
+                //printf("ci = %d, %d\n", ci->first, ci->second);
                 if (grid.at(ci->first, ci->second) && visited.count(*ci) == 0) {
-                    printf("Hit!\n");
+                    //printf("Hit!\n");
                     visit_queue.push(*ci);
                     visited[*ci] = region_name;
                 }
