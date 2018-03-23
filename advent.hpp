@@ -122,5 +122,16 @@ void print(FILE * f, std::pair<A, B> const & P) {
     printf(")");
 }
 
+inline uint8_t hibyte(uint16_t S) {
+    return S >> 8;
+}
+
+inline uint8_t lobyte(uint16_t S) {
+    return S;
+}
+
+inline uint16_t UINT16(uint8_t hi, uint8_t lo) {
+    return (hi << 8) | lo;
+}
 
 #endif // ADVENT_HPP

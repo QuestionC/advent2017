@@ -3,7 +3,6 @@
 
 #include <vector>
 
-
 // Depends on advent10.  Looks like we just count the bits in the hash
 
 struct Rope {
@@ -78,5 +77,42 @@ struct Rope {
         return;
     }
 };
+
+// 128x128 grid of bits.
+struct BinaryGrid {
+    char buff[128][16];
+    const int height = 128;
+    const int width = 128;
+
+    bool at(int x, int y) const {
+        if (x < 0 || y < 0 || x > width || y > width)
+            return false;
+
+        unsigned offset = x / 8;
+        unsigned char mask = u'\x80' >> (x % 8);
+
+        return buff[y][offset] & mask;
+    }
+
+    BinaryGrid(char B[128][16]) {
+        memcpy(buff, B, 128 * 16);
+    }
+
+    BinaryGrid() {
+    }
+};
+
+inline void print(FILE * f, BinaryGrid const & print_me) {
+    for (int y = 0; y < print_me.height; ++y) {
+        for (int x = 0; x < print_me.width; ++x) {
+            if (print_me.at(x, y)) {
+                fputc('#', f);
+            } else {
+                fputc('.', f);
+            }
+        }
+        fputc('\n', f);
+    }
+}
 
 #endif // advent14_HPP
