@@ -85,7 +85,7 @@ struct BinaryGrid {
     const int width = 128;
 
     bool at(int x, int y) const {
-        if (x < 0 || y < 0 || x > width || y > width)
+        if (x < 0 || y < 0 || x >= width || y >= width)
             return false;
 
         unsigned offset = x / 8;
