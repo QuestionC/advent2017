@@ -9,8 +9,9 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <algorithm>
 
-#define DPRINT(X) std::cerr << #X ": " << X << '\n';
+#define DPRINT(X) std::cout << #X ": " << X << '\n';
 
 std::ostream & operator<< (std::ostream & out, std::pair<int, int> P) {
     out << "(" << P.first << ", " << P.second << ")\n";
