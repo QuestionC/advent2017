@@ -100,6 +100,10 @@ void print(FILE * f, int const & i) {
     printf("%d", i);
 }
 
+void print(FILE * f, char const & c) {
+    printf("%c", c);
+}
+
 template<class A, class B>
 void print(FILE * f, std::map<A, B> const & C) {
     printf ("{");
@@ -110,8 +114,9 @@ void print(FILE * f, std::map<A, B> const & C) {
         print(f, ci->first);
         fprintf(f, ": ");
         print(f, ci->second);
+        print(f, '\n');
     }
-    printf("}");
+    printf("}\n");
 }
 
 template<class A, class B>
@@ -121,6 +126,19 @@ void print(FILE * f, std::pair<A, B> const & P) {
     printf(", ");
     print(f, P.second);
     printf(")");
+}
+
+template <class A>
+void print(FILE * f, std::vector<A> const & V) {
+    fprintf(f, "[");
+    for (int i = 0; i < V.size(); ++i) {
+        if (i != 0) {
+            fprintf(f, ", ");
+        }
+        print(f, V[i]);
+    }
+
+    fprintf(f, "]");
 }
 
 inline uint8_t hibyte(uint16_t S) {

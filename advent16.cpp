@@ -5,6 +5,7 @@
 
 int read_cmd(FILE * f, std::string & cmd);
 void exe_cmd(std::string const & run_me, std::vector<char> & programs);
+std::vector<int> apply_transform(std::vector<int> const & transform_me, std::vector<int> const & transformation);
 
 int main(void) {
     // The input file is 48k and we go through them in one pass, so let's not load it into a string.
@@ -26,17 +27,76 @@ int main(void) {
 
     DPRINT(programs);
 
-    // Star 2: Do it 999999999 more times!
-    for (unsigned long i = 0; i < 999'999'999; ++i) {
-        for (std::vector<std::string>::const_iterator ci = cmds.begin(); ci != cmds.end(); ++ci) {
-            exe_cmd(*ci, programs);
-        }
-        if (i % 1'000 == 0) {
-            printf("%ld\n", i);
+    // PART 2
+    fclose(f);
+    f = fopen("input16.txt", "r");
+
+    std::vector<int> positional_swaps;
+    std::vector<int> character_swaps;
+    for (int i = 0; i < 16; ++i) {
+        positional_swaps.push_back(i);
+        character_swaps.push_back(i);
+    }
+
+    while (read_cmd(f, cmd)) {
+        char const * c_str = cmd.c_str();
+        int A, B;
+        switch(cmd[0]) {
+            case 's':
+            sscanf(c_str + 1, "%d", &A);
+            std::rotate(positional_swaps.rbegin(), positional_swaps.rbegin() + A, positional_swaps.rend());
+            break;
+
+            case 'x':
+            sscanf(c_str + 1, "%d/%d", &A, &B);
+            std::swap(positional_swaps[A], positional_swaps[B]);
+            break;
+
+            case 'p':
+            A = c_str[1] - 'a';
+            B = c_str[3] - 'a';
+            std::swap(character_swaps[A], character_swaps[B]);
+            break;
         }
     }
 
-    DPRINT(programs);
+    print(stdout, positional_swaps);
+    print(stdout, '\n');
+    print(stdout, character_swaps);
+    print(stdout, '\n');
+
+    // Now that we have the swaps.  Iterate them 1'000'000'000 times
+
+    std::vector<int> curr_positional_swaps;
+    std::vector<int> curr_character_swaps;
+    for (int i = 0; i < 16; ++i) {
+        curr_positional_swaps.push_back(i);
+        curr_character_swaps.push_back(i);
+    }
+
+    int total = 1'000'000'000;
+    //int total = 1;
+
+    // Apply the swaps binarily
+    for (int mask = 1; mask <= total; mask <<= 1) {
+        if (mask & total) {
+            curr_positional_swaps = apply_transform(curr_positional_swaps, positional_swaps);
+            curr_character_swaps = apply_transform(curr_character_swaps, character_swaps);
+        }
+
+        positional_swaps = apply_transform(positional_swaps, positional_swaps);
+        character_swaps = apply_transform(character_swaps, character_swaps);
+    }
+
+    DPRINT(curr_positional_swaps);
+    DPRINT(curr_character_swaps);
+
+    // Print the result
+    for (std::vector<int>::const_iterator ci = curr_positional_swaps.begin(); ci != curr_positional_swaps.end(); ++ci) {
+        std::vector<int>::iterator offset = std::find(curr_character_swaps.begin(), curr_character_swaps.end(), *ci);
+        printf("%c", offset - curr_character_swaps.begin() + 'a');
+    }
+    printf("\n");
 
     return 0;
 }
@@ -82,4 +142,14 @@ void exe_cmd(std::string const & run_me, std::vector<char> & programs) {
     } // End switch
 
     return;
+}
+
+std::vector<int> apply_transform(std::vector<int> const & transform_me, std::vector<int> const & transformation) {
+    std::vector<int> result;
+
+    for (auto ci = transformation.cbegin(); ci != transformation.cend(); ++ci) {
+        result.push_back(transform_me[*ci]);
+    }
+
+    return result;
 }
