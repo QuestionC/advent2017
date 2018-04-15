@@ -1,1 +1,1 @@
-wget --no-cookies --header "cookie:session=53616c7465645f5f9eba33382b64567ede237e6a4653cbd0ea87d45b80928052676c4e9709c7070cc96b46e28fc9051f" https://adventofcode.com/2017/day/$1/input -O input$1.txt
+wget --no-cookies --header "cookie:_ga=GA1.2.1834387917.1521099830; session=53616c7465645f5f68d9dd884e182cc8020bb6589d2055880f731733aa1426dc72c1b49209926b6934578d8a798529e7" https://adventofcode.com/2017/day/$1/input -O input$1.txt
