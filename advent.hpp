@@ -104,6 +104,10 @@ void print(FILE * f, char const & c) {
     printf("%c", c);
 }
 
+void print(FILE * f, long long const & ll) {
+    printf("%lld", ll);
+}
+
 void print(FILE * f, std::string const & S) {
     printf("%s", S.c_str());
 }

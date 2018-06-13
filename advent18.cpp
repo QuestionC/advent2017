@@ -17,9 +17,9 @@ void print(FILE * f, Command const & C) {
     fprintf(f, "%s %s %s", C.cmd.c_str(), C.A.c_str(), C.B.c_str());
 }
 
-int value(std::string S, std::map<std::string, int> const & registers) {
-    int val;
-    int n = sscanf(S.c_str(), "%d", &val);
+long long value(std::string S, std::map<std::string, long long> const & registers) {
+    long long val;
+    int n = sscanf(S.c_str(), "%lld", &val);
 
     if (n == 0) {
         val = registers.at(S);
@@ -30,7 +30,7 @@ int value(std::string S, std::map<std::string, int> const & registers) {
 
 // Process the command pointed at by ip with the given registers.
 // Returns the result of a rcv command, or 0 for all other commands
-int process(std::vector<Command> const & commands, int & ip, std::map<std::string, int> & registers) {
+int process(std::vector<Command> const & commands, int & ip, std::map<std::string, long long> & registers) {
     std::string cmd = commands[ip].cmd;
     std::string A = commands[ip].A;
     std::string B = commands[ip].B;
@@ -48,7 +48,7 @@ int process(std::vector<Command> const & commands, int & ip, std::map<std::strin
         registers[A] = value(A, registers) % value(B, registers);
     } else if (cmd == "rcv") {
         if (value(A, registers) != 0)
-            return last_snd;
+            return -1;
     } else if (cmd == "jgz") {
         if (value(A, registers) > 0)
             ip += value(B, registers) - 1;
@@ -85,15 +85,19 @@ int main(void) {
         commands.push_back(Command(cmd, A, B));
     }
 
-    std::map<std::string, int> registers;
+    std::map<std::string, long long> registers;
     int ip = 0;
 
     int result = 0;
     while (result == 0) {
+        print(stdout, commands[ip]);
+        printf("\nip: %d\n", ip);
         result = process(commands, ip, registers);
-        print(stdout, last_snd);
         print(stdout, registers);
+        printf("-----\n");
     }
+
+    printf("last_snd: %d\n", last_snd);
 
     return 0;
 }
