@@ -104,6 +104,10 @@ void print(FILE * f, char const & c) {
     printf("%c", c);
 }
 
+void print(FILE * f, std::string const & S) {
+    printf("%s", S.c_str());
+}
+
 template<class A, class B>
 void print(FILE * f, std::map<A, B> const & C) {
     printf ("{");
@@ -114,7 +118,7 @@ void print(FILE * f, std::map<A, B> const & C) {
         print(f, ci->first);
         fprintf(f, ": ");
         print(f, ci->second);
-        print(f, '\n');
+        // print(f, '\n');
     }
     printf("}\n");
 }
