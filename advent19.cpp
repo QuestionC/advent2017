@@ -32,10 +32,12 @@ int main (void) {
     int y = start_y;
     int dir_x = 0;
     int dir_y = 1;
+    int steps = 0;
 
     std::vector<char> visited;
 
     for(;;) {
+        steps++;
         y += dir_y;
         x += dir_x;
 
@@ -83,6 +85,8 @@ int main (void) {
     for (auto i = visited.begin(); i != visited.end(); ++i) {
         printf("%c\n", *i);
     }
+
+    printf ("%d steps\n", steps);
 
     return 0;
 }
