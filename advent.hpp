@@ -10,6 +10,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <list>
 
 #define DPRINT(X) std::cout << #X ": " << X << '\n';
 
@@ -144,6 +145,19 @@ void print(FILE * f, std::vector<A> const & V) {
             fprintf(f, ", ");
         }
         print(f, V[i]);
+    }
+
+    fprintf(f, "]");
+}
+
+template <class A>
+void print(FILE * f, std::list<A> const & V) {
+    fprintf(f, "[");
+    for (auto i = V.begin(); i != V.end(); ++i) {
+        if (i != V.begin()) {
+            fprintf(f, ", ");
+        }
+        print(f, *i);
     }
 
     fprintf(f, "]");
