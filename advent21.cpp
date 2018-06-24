@@ -3,12 +3,94 @@
 #include <string.h>
 #include <exception>
 
+// Helper class to represent a square set of bits
+class Image {
+    public:
+    std::vector<bool> data;
+    int size;
+
+    Image();
+    Image(char const * S, int size);
+
+    void resize(int size);
+    bool at(int x, int y) const;
+    char char_at(int x, int y) const;
+    std::string char_at(int x0, int y0, int x1, int y1) const;
+    void blit(int x0, int y0, int x1, int y1, char const * S);
+
+    int num_lights() const;
+};
+
+Image::Image() {
+    size = 0;
+}
+
+Image::Image(char const * S, int _size) {
+    size = _size;
+    data.resize(size * size);
+    blit(0, 0, size, size, S);
+}
+
+void Image::resize(int _size) {
+    size = _size;
+    data.resize(size * size);
+}
+
+bool Image::at(int x, int y) const {
+    return data[y * size + x];
+}
+
+char Image::char_at(int x, int y) const {
+    return data[y * size + x] ? '#':'.';
+}
+
+std::string Image::char_at(int x0, int y0, int x1, int y1) const {
+    std::string output;
+    for (auto y = y0; y < y1; ++y) {
+        for (auto x = x0; x < x1; ++x) {
+            output += char_at(x, y);
+        }
+    }
+    return output;
+}
+
+void Image::blit(int x0, int y0, int x1, int y1, char const * S) {
+    auto curr_char = S;
+    for (auto y = y0; y < y1; ++y) {
+        for (auto x = x0; x < x1; ++x) {
+            if (*curr_char == '#')
+                data[y * size + x] = true;
+            else if (*curr_char == '.')
+                data[y * size + x] = false;
+            else
+                throw std::runtime_error("Invalid char in Image::blit");
+            ++curr_char;
+        }
+    }
+}
+
+int Image::num_lights() const {
+    return std::count(data.begin(), data.end(), true);
+} 
+void print (FILE * f, Image const & print_me) {
+    printf("print(f, Image)\n");
+    putc('\n', f);
+
+    auto ci = print_me.data.cbegin();
+    for (int i = 0; i < print_me.size; ++i) {
+        for (int j = 0; j < print_me.size; ++j) {
+            putc(*ci++?'#':'.', f);
+        }
+        putc('\n', f);
+    }
+}
+
 class Pattern {
     public:
         size_t size, output_size;
         char pattern[5][5], output_pattern[5][5];
+        char output_flat[25];
         int m_num_lights;
-        std::vector<std::string> output_substrings;
 
         Pattern(char const * S);
 
@@ -16,9 +98,6 @@ class Pattern {
         int num_lights() const;
         void print(FILE * f) const;
         void print_output(FILE * f) const;
-        char const * c_str() const;
-        char const * c_output() const;
-
 
         bool ismatch(char const * S);
 };
@@ -55,6 +134,11 @@ Pattern::Pattern(char const * S) {
 
     output_size = i;
 
+    // Populate output_flat
+    for (int i = 0; i < output_size; ++i) {
+        strcpy(output_flat + i * output_size, output_pattern[i]);
+    }
+
     m_num_lights = 0; 
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
@@ -64,35 +148,6 @@ Pattern::Pattern(char const * S) {
         }
     }
 
-    // Build the output substrings
-    if (size == 2) {
-        std::string buff;
-        buff += output_pattern[0];
-        buff += output_pattern[1];
-        buff += output_pattern[2];
-        output_substrings.push_back(buff);
-    } else if (size == 3) {
-        std::string buff;
-
-        buff.append(output_pattern[0],2);
-        buff.append(output_pattern[1],2);
-        output_substrings.push_back(buff);
-
-        buff.clear();
-        buff.append(output_pattern[0]+2, 2);
-        buff.append(output_pattern[1]+2, 2);
-        output_substrings.push_back(buff);
-
-        buff.clear();
-        buff.append(output_pattern[2],2);
-        buff.append(output_pattern[3],2);
-        output_substrings.push_back(buff);
-
-        buff.clear();
-        buff.append(output_pattern[2]+2, 2);
-        buff.append(output_pattern[3]+2, 2);
-        output_substrings.push_back(buff);
-    }
 }
 
 void Pattern::print(FILE * f) const {
@@ -216,22 +271,36 @@ fail8:
     return false;
 }
 
-int count_lights(std::vector<Pattern> const & patterns, std::vector<int> const & ids) {
-    int total = 0;
-    for (auto i = ids.begin(); i != ids.end(); ++i) {
-        total += patterns[*i].num_lights();
-    }
-    return total;
-}
+Image iterate_image(Image const & input, std::vector<Pattern> const & patterns) {
+    Image output;
 
-std::vector<int> iterate_patterns(std::map<int, std::vector<int> > pattern2output, std::vector<int> const & ids) {
-    std::vector<int> result;
-    for (auto i = ids.begin(); i != ids.end(); ++i) {
-        for (auto j = pattern2output[*i].begin(); j != pattern2output[*i].end(); ++j) {
-            result.push_back(*j);
+    int input_block_size;
+    int output_block_size;
+    if (input.size % 2 == 0) {
+        input_block_size = 2;
+        output_block_size = 3;
+    } else if (input.size % 3 == 0) {
+        input_block_size = 3;
+        output_block_size = 4;
+    } else {
+        throw std::runtime_error("iterate_image with non-divisable size");
+    }
+        
+    int num_blocks = input.size / input_block_size;
+
+    output.resize(num_blocks * output_block_size);
+
+    for (int y = 0; y < num_blocks; ++y) {
+        for (int x = 0; x < num_blocks; ++x) {
+            std::string input_block = input.char_at(x * input_block_size, y * input_block_size, (x + 1) * input_block_size, (y + 1) * input_block_size);
+
+            auto ci = std::find_if(patterns.cbegin(), patterns.cend(), [& input_block](auto p) { return p.ismatch(input_block.c_str()); } );
+
+            output.blit(x * output_block_size, y * output_block_size, (x + 1) * output_block_size, (y + 1) * output_block_size, ci->output_flat); 
         }
     }
-    return result;
+
+    return output;
 }
 
 int main (void) {
@@ -252,8 +321,7 @@ int main (void) {
     patterns[26].print_output(stdout);
     printf("\n");
 
-    print(stdout, patterns[26].output_substrings);
-    printf("\n");
+    printf ("output_flat: %s\n", patterns[26].output_flat);
 
     /*
     printf (patterns[26].ismatch("..###....")?"True":"False");
@@ -261,51 +329,15 @@ int main (void) {
     printf (patterns[26].ismatch("..#.#.#..")?"True":"False");
     */
 
-    std::map<int, std::vector<int> > pattern2output;
-
-    for (int i = 0; i < patterns.size(); ++i) {
-        std::vector<int> curr_pattern_output;
-        for (auto j = patterns[i].output_substrings.begin(); j != patterns[i].output_substrings.end(); ++j) {
-            int k;
-            for (k = 0; k < patterns.size(); ++k) {
-                if (patterns[k].ismatch(j->c_str()))
-                    break;
-            }
-            if (k == patterns.size()) {
-                throw std::runtime_error("Found invalid subpattern");
-            }
-            curr_pattern_output.push_back(k);
-        }
-        pattern2output[i]=curr_pattern_output;
-    }
-
-    print(stdout, pattern2output[26]);
-    printf("\n");
-
-    char const * start_pattern = ".#...####";
-    char start_pattern_id;
-    for (start_pattern_id = 0; start_pattern_id < patterns.size(); ++start_pattern_id) {
-        if (patterns[start_pattern_id].ismatch(start_pattern))
-            break;
-    }
-    if (start_pattern_id == patterns.size()) {
-        throw std::runtime_error("Couldn't find a start pattern");
-    }
-
-    std::vector<int> curr_patterns;
-    curr_patterns.push_back(start_pattern_id);
-
-    print(stdout, curr_patterns);
-    printf("\n");
-
-    printf ("%d lights\n", count_lights(patterns, curr_patterns));
-    
+    Image I(".#...####", 3);
+   
     for (int i = 0; i < 6; ++i) {
-        printf ("Iteration %d\n", i);
-        print (stdout, curr_patterns);
-        printf("\n");
-        printf ("%d lights\n", count_lights(patterns, curr_patterns));
-        curr_patterns = iterate_patterns(pattern2output, curr_patterns);
+        printf("Iteration %d\n", i);
+        print(stdout, I);
+        printf("%d Lights\n", I.num_lights());
+        printf("-----\n");
+
+        I = iterate_image(I, patterns);
     }
 
     return 0;
